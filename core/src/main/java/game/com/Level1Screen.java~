@@ -1,0 +1,289 @@
+package game.com;
+
+import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.Screen;
+import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.graphics.Color;
+import com.badlogic.gdx.graphics.g2d.BitmapFont;
+import com.badlogic.gdx.scenes.scene2d.InputEvent;
+import com.badlogic.gdx.scenes.scene2d.Stage;
+import com.badlogic.gdx.scenes.scene2d.ui.ImageButton;
+import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
+import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
+import com.badlogic.gdx.scenes.scene2d.utils.TextureRegionDrawable;
+import com.badlogic.gdx.utils.ScreenUtils;
+import com.badlogic.gdx.utils.viewport.ScreenViewport;
+import com.badlogic.gdx.graphics.g2d.freetype.FreeTypeFontGenerator;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import static game.com.Main.saved_game;
+import static game.com.Main.screens;
+
+public class Level1Screen extends Level implements Screen {
+    private Texture levelImage;
+    private SpriteBatch batch;
+    private ImageButton pauseButton;
+    private BitmapFont font, customFont;
+    private Stage stage;
+    private Main main;
+    private TextButton win;
+    private TextButton lose;
+
+    // Lists to hold birds, blocks, and pigs
+    private List<Bird> birds;
+    private List<Block> blocks;
+    private List<Pig> pigs;
+
+    private Sling_Shot slingshot;  // Instance for the slingshot
+
+    float Red_Bird_Health = 1;
+    float Big_Red_Bird_Health = 1;
+    float Black_Bird_Health = 1;
+
+    private boolean isPaused = false;  // For pause handling
+
+    public Level1Screen(Main main) {
+        this.main = main;
+
+        // Initialize the stage and input processor
+        stage = new Stage(new ScreenViewport());
+        Gdx.input.setInputProcessor(stage);
+
+        // Load default font and custom font
+        font = new BitmapFont();
+        font.getData().setScale(2f);
+
+        // Custom font
+        FreeTypeFontGenerator generator = new FreeTypeFontGenerator(Gdx.files.internal("ui/angrybirds-regular.ttf"));
+        FreeTypeFontGenerator.FreeTypeFontParameter parameter = new FreeTypeFontGenerator.FreeTypeFontParameter();
+        parameter.size = 48;
+        parameter.color = Color.WHITE;
+        customFont = generator.generateFont(parameter);
+        generator.dispose();
+
+
+        // Initialize pause button
+        Texture pauseTexture = new Texture(Gdx.files.internal("images/pause.png"));
+        pauseButton = new ImageButton(new TextureRegionDrawable(pauseTexture));
+        pauseButton.setSize(150, 100);
+        pauseButton.setPosition(Gdx.graphics.getWidth() - pauseButton.getWidth() - 20, Gdx.graphics.getHeight() - pauseButton.getHeight() - 20);
+        stage.addActor(pauseButton);
+
+        win = new TextButton("WIN", createButtonStyle(font));
+        win.setSize(150, 80);
+        win.setPosition(Gdx.graphics.getWidth() - pauseButton.getWidth() - 500, Gdx.graphics.getHeight() - pauseButton.getHeight() - 20);
+        stage.addActor(win);
+
+        lose = new TextButton("LOSE", createButtonStyle(font));
+        lose.setSize(150, 80);
+        lose.setPosition(Gdx.graphics.getWidth() - pauseButton.getWidth() - 1000, Gdx.graphics.getHeight() - pauseButton.getHeight() - 20);
+        stage.addActor(lose);
+
+
+        // Create pause menu buttons (resume, restart, save/exit) here as done before...
+        createPauseMenu(stage);
+
+        win.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                System.out.println("winButton clicked");
+                saved_game.remove("Level1Screen");
+
+                main.setScreen(new Win_screen(main));
+                System.out.println("You win!");
+
+            }
+        });
+
+        lose.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                System.out.println("loseButton clicked");
+                saved_game.remove("Level1Screen");
+                main.setScreen(new Lose_Screen(main));
+
+
+            }
+        });
+
+        // Add listener for pause button
+        pauseButton.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                System.out.println("pauseButton clicked");
+                isPaused = !isPaused;  // Toggle pause state
+                togglePauseMenu(isPaused);  // Show/hide the pause menu
+            }
+        });
+
+
+        resumeButton.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y){
+                System.out.println("resumeButton clicked");
+                isPaused = false;
+                togglePauseMenu(false);
+            }
+        });
+
+        restartButton.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                System.out.println("restartButton clicked");
+                screens.replace("Level1Screen", new Level1Screen(main));
+                main.setScreen(screens.get("Level1Screen"));
+            }
+        });
+
+        save_exitButton.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                // Implement the save functionality
+                if (screens.get("Level1Screen") != null) {
+                    screens.remove("Level1Screen");
+                    screens.put("Level1Screen", new Level1Screen(main));
+                    saved_game.put("Level1Screen", new Level1Screen(main));
+                }
+                System.out.println("Game Saved!");
+
+                main.setScreen(new Game_saved(main));
+            }
+        });
+
+        // Add listeners for pause menu buttons (resume, restart, save/exit)...
+
+        // Initialize birds, blocks, pigs, and slingshot
+        initGameObjects();
+    }
+
+
+    private void initGameObjects() {
+        birds = new ArrayList<>();
+        blocks = new ArrayList<>();
+        pigs = new ArrayList<>();
+
+        // Initialize slingshot at the far left with a bird loaded
+        levelImage = new Texture(Gdx.files.internal("images/level1.png"));
+
+        Texture slingshotTexture = new Texture(Gdx.files.internal("images/Sling_Shot.png"));
+        slingshot = new Sling_Shot(130, 170,slingshotTexture , 300, 300);
+        // Add birds
+        birds.add(new Red_Bird(180, 170, new Texture(Gdx.files.internal("images/Red_Bird.png")), 80, 80, Red_Bird_Health)); // Position near slingshot
+        birds.add(new Big_Red_Bird(200, 410, new Texture(Gdx.files.internal("images/Big_Red_Bird.png")), 100, 100, Red_Bird_Health)); // Position near slingshot
+        birds.add(new Black_Bird(130, 170, new Texture(Gdx.files.internal("images/Black_Bird.png")), 80, 80, Red_Bird_Health)); // Position near slingshot
+
+        blocks.add(new Wood_Block(1300, 200, new Texture(Gdx.files.internal("images/vertical_wood_block.png")), 40, 300,1));
+        blocks.add(new Wood_Block(1710, 200, new Texture(Gdx.files.internal("images/vertical_wood_block.png")), 40, 300,1));
+
+
+        blocks.add(new Wood_Block(1300, 170, new Texture(Gdx.files.internal("images/horizontal_wood_block.png")), 150, 40,1));  // Bottom
+        blocks.add(new Wood_Block(1450, 170, new Texture(Gdx.files.internal("images/horizontal_wood_block.png")), 150, 40,1));  // Middle
+        blocks.add(new Wood_Block(1600, 170, new Texture(Gdx.files.internal("images/horizontal_wood_block.png")), 150, 40,1));  // Top
+
+        blocks.add(new Rock_Block(1400, 200, new Texture(Gdx.files.internal("images/vertical_rock_block.png")), 40, 150,1));  // Left Rock Block
+        blocks.add(new Rock_Block(1610, 200, new Texture(Gdx.files.internal("images/vertical_rock_block.png")), 40, 150,1)); // Right Rock Block
+
+        // Ice Blocks
+        blocks.add(new Ice_Block(1400, 350, new Texture(Gdx.files.internal("images/horizontal_ice_block.png")), 250, 40,1));  // Left Ice Block
+        blocks.add(new Ice_Block(1300, 495, new Texture(Gdx.files.internal("images/horizontal_ice_block.png")), 450, 40,1)); // Right Ice Block
+
+        // Add pigs
+        pigs.add(new PIG_2(1495, 200, new Texture(Gdx.files.internal("images/PIG_2.png")), 100, 100, 1)); // Pig on top
+
+        pigs.add(new PIG_3(1655, 200, new Texture(Gdx.files.internal("images/PIG_3.png")), 60, 60, 1)); // Pig on middle
+        pigs.add(new PIG_3(1345, 200, new Texture(Gdx.files.internal("images/PIG_3.png")), 60, 60, 1)); // Pig on middle
+
+        pigs.add(new PIG_1(1480, 535, new Texture(Gdx.files.internal("images/PIG_1.png")), 100, 100, 1)); // Pig on bottom
+
+
+
+
+    }
+
+
+
+    private TextButton.TextButtonStyle createButtonStyle(BitmapFont font) {
+        TextButton.TextButtonStyle buttonStyle = new TextButton.TextButtonStyle();
+        buttonStyle.font = font;
+        return buttonStyle;
+    }
+
+    @Override
+    public void show() {
+
+
+        batch = new SpriteBatch();
+
+        Gdx.input.setInputProcessor(stage);
+    }
+
+    @Override
+    public void render(float delta) {
+        // Clear the screen and draw the level image
+        ScreenUtils.clear(0, 0, 0, 1);
+        batch.begin();
+        batch.draw(levelImage, 0, 0, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());  // Fullscreen image
+        slingshot.draw(batch);
+
+
+        // Draw each bird at its position and with its specified width and height
+        for (Bird bird : birds) {
+            batch.draw(bird.texture, bird.getx(), bird.gety(), bird.getWidth(), bird.getHeight());
+        }
+
+
+        for (Block block : blocks) {
+            batch.draw(block.texture, block.x, block.y, block.width, block.height);
+        }
+
+        // Draw each pig
+        for (Pig pig : pigs) {
+            batch.draw(pig.texture, pig.x, pig.y, pig.width, pig.height);
+        }
+
+
+
+        batch.end();
+
+        if(!isPaused){
+            stage.act(delta);
+        }
+        stage.draw();  // Always draw the stage
+    }
+
+    @Override
+    public void resize(int width, int height) {
+        stage.getViewport().update(width, height, true);
+    }
+
+    @Override
+    public void pause() {}
+
+    @Override
+    public void resume() {}
+
+    @Override
+    public void hide() {}
+
+    @Override
+    public void dispose() {
+        levelImage.dispose();
+        batch.dispose();
+        stage.dispose();
+        slingshot.getTexture().dispose();
+
+        // Dispose of textures for birds, blocks, and pigs
+        for (Bird bird : birds) {
+            bird.texture.dispose();
+        }
+        for (Block block : blocks) {
+            block.texture.dispose();
+        }
+        for (Pig pig : pigs) {
+            pig.texture.dispose();
+        }
+    }
+}
