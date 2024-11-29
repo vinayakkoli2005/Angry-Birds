@@ -1,0 +1,52 @@
+AP_GROUP_PROJECT_     _ANGRY_BIRDS_
+-------------------------------------------
+
+Instructions to run the file
+-------------------------------
+
+- Download the zip file and extract the file.
+- Open the file with intellij IDEA.
+- Wait for the gradle to import.
+- On the left of run button in the dropdown menu, select Edit Configurations.
+- Add a new configuration.
+- Select AP_Game_New_lwjgl3.main and jdk will be chosen automatically
+- On the below box click it and an option of launcher will appear automatically .
+- Select the launcher apply the changes click of button and you are now set to run the Game,
+
+
+Assumptions 1
+---------------------------------
+- I am free to choose any level want to play without the need to clear pervious level even after winning a level you are free to
+  choose which level to play
+
+
+Assumptions 2
+----------------------------
+
+- Bird is changed only when it collide with any object like pigs or blocks . if not touched you can always restart the game/level and try again.
+
+
+Assumptions 3
+---------------------------------
+
+- Different blocks and pigs have different health
+- Health PIG_1 > PIG_2 > PIG_3
+- Health Rock_Block > Wood_Block > Ice_Block
+- Damage PIG_1 > PIG_2 > PIG_3
+
+Assumptions 4
+-----------------
+
+- Bird is streached in the direction it is intended to be thrown
+
+
+Demo video Link
+-----------------
+
+https://drive.google.com/file/d/1D-XeHce4kque0kgER6Mzyes4QUpR366C/view?usp=drive_link
+
+
+Lucid UML Link
+-----------------
+
+https://lucid.app/lucidchart/fffcdefe-82a3-40b5-94e1-115cb1e61404/edit?viewport_loc=-3949%2C-565%2C8617%2C4435%2CHWEp-vi-RSFO&invitationId=inv_19a105d6-a48e-4f5a-ad53-349abb0fa549
